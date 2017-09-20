@@ -1,0 +1,72 @@
+Le bois est une matière vivante dont les propriétes varient en fonction de du taux d'humidité contenu dans celui-ci.
+Par exemple, le bois de chauffage a un rendement optimal si et seulement s'il ne contient pas plus de 20% d'eau.
+D'une manière plus précise, les experts métier ont défini un ensemble de documents techniques unifiés (DTU 31.1 et 31.2) où est défini le taux d'umidité en fonction de l'application de bois utilisés. Les définitions sont reportées ci-dessous :
+
+- charpente : entre 15 et 20%
+- bois de construction (ex : maisons ossatures bois) : inférieur ou égale à 18%
+- Menuiserie extérieur : entre 15 et 18%
+- Charpente lamellée-collée : inférieur ou égale 13%
+- Charpente visible de l'intérieur entre 10 et 13%
+- Menuiserie intérieur et parquet : entre 8 ett 12%
+- Ébénesterie : inférieur à 8%
+
+Pour mesurer l'humidité, des appareils idouanes existent : l'humidimètre. Cependant, ils sont loin d'être d'une qualité uniforme et ne permettent pas de savoir la teneur en humidité exacte.
+En effet, les moins onéreux (quelques dizaine d'euros - par exemple le modèle cèommercialisé par [le plus gros fabricant de tronçonneuse](https://www.amazon.fr/Humidim%C3%A8tre-Stihl-pour-le-bois/dp/B004A2XUO2/ref=pd_cp_60_1?_encoding=UTF8&psc=1&refRID=4WEZEBG1NZMPQ36XJ2QT)) ne permettront pas de faire mieux que d'évaluer si votre bois de chaffage peut être utilisé en l'état. Les modèles les plus aboutis (quelques centaines d'euros - par exemple chez [Wagner](https://www.wagnermeters.com/shop/mmc220-extended-range-moisture-meter/))
+
+Il existe de différente manière pour mesurer le taux d'humidité. Nous allons ici utilisée la plus basique, celle des appareils les moins couteux, c'est à dire la détermination de la résistivité du bois.
+
+En effet, la résistivité du bois évolue en fonction du  taux d'humidité. Nous allons donc mesurer cette résistance à l'aide du raspberry.
+
+Cependant, nous n'allons pas mesurer directement la résistance du bois, nous allons réaliser la mesure à l'aide d'un voltmètre mis en série.
+
+En effet la figure ci-dessous décrit le montage à réaliser pour déterminer la résistance en fonction de la résistance interne de voltmètre (Rmeter), la tension de l'alimentation (Vbat, ici 5V) et la tension mesurer par le Voltmètre (Vmeter). La relation mathématiques entre les éléments est décrit par les équations suivantes :
+
+
+
+Le challenge est donc ici de detransformer le Raspberry Pi en Voltmètre numérique.
+
+# Transformer un Raspberry en voltmètre numérique
+
+Pour réaliser la mesure d'une tension à l'aide d'un raspberry, il suufit d'utiliser un convertisser de tension analogique/numérique. 
+
+Oui, mais…
+
+Si vous réalisez ce montage direct, vous ne pouvez pas considérez que vous avez entre les mains un voltmètre numérique. En effet, un voltmètre numérique, dans le but de ne pas modifier les proriétés électriques d'un circuit, possède une résistance interne importante.
+En théorie infinie, en pratique de l'ordre de 10 Méga-ohms.
+
+Il est donc nécessaire de passer par un pont diviseur à la résistance global importante. Sans rentrer dans le détail ici, nous allons réaliser le montage disponible à l'étage ci-dessous :
+
+
+Il ne restera plus qu'à déterminer la résistarce éxacte de ce voltmètre
+
+# Détermination de la résistance interne du voltmètre
+
+Afin d'augmenter la précision de l'application finale, il est nécessaire de réaliser la mesure exacte de la résistance interne du voltèmtre que nous venons de réaliser.
+
+Pour cela, le pus simple est de réaliser le montage suivant :
+
+Ce montage consiste à placer un ampèremètre en série ainsi que notre voltmètre en parallèle sur une source de tension continue stable.
+L'ampéremètre mesurera donc le currant qui traverse la résistance interne du voltmètre. Et, on inversant la loi d'Ohm ont obtient la résistance interne du voltmètre. En prenant comme tension la valeur de la source et non celle lue par le voltmètre.
+
+Bon c'est bien joli mais comment en on passe de cette valeur de résistance du bois au tôt d'humidité.
+
+# Déductior du taux d'humidité du bois
+
+Le montage réalisé précédemment permet d'obtenir la valeur numérique de la tension mesurée par notre voltmètre. La formule ci-dessous nous permet de calculer la résistance du bois.
+
+Il est donc nécessaire de remonter à la valeur du taux d'humidité. Pour cela, nous allons utiliser les résultats des travaux du département de l'agriculture américain sur le sujet (disponible [ici](https://www.fpl.fs.fed.us/documnts/fplgtr/fplgtr06.pdf) et plus particulièrement les tables permettant de relier la résistance d'une essence de bois au taux d'humidité associé.
+
+Il est donc nécessaire, pour un essence donnée, de trouver la résistance la plus proche dans la table et donc dans déduire le taux d'humidité.
+
+Pour plus de facilité, j'ai créer un fichier CSV contenant les tables de correspondances.
+
+Cette table a été réalisée à partir [des travaux de Mathias Wandel](http://woodgears.ca/lumber/moisture_meter.html), le fameux youtuber et maker germano-canadien!
+
+La manipulation des données sont réalisées à l'aide de la librairie Pandas qui facilite de manière important la manipulation des données contenu dans un CSV!
+
+# Le code Python 
+
+Le code python est disponible sur le repo github suivant : [repo du projet MesHumBoisRpi](https://github.com/clemaitre58/MesHumBoisRpi.git)
+
+
+
